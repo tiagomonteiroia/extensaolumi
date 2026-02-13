@@ -137,7 +137,9 @@ async function syncAll() {
         lastSyncStatus: 'no_cookies',
         lastSyncAt: new Date().toISOString(),
         lastCookieCountML: 0,
-        lastCookieCountAmz: 0
+        lastCookieCountAmz: 0,
+        statusML: 'no_cookies',
+        statusAmz: 'no_cookies'
       });
       return { success: false, error: 'Nenhum cookie encontrado' };
     }
@@ -158,7 +160,9 @@ async function syncAll() {
       lastSyncAt: now,
       lastSyncStatus: 'success',
       lastCookieCountML: countMl,
-      lastCookieCountAmz: countAmz
+      lastCookieCountAmz: countAmz,
+      statusML: countMl > 0 ? 'success' : 'no_cookies',
+      statusAmz: countAmz > 0 ? 'success' : 'no_cookies'
     });
 
     setBadge('✓', '#10B981'); // Green checkmark
@@ -272,7 +276,9 @@ async function handleLogout() {
     lastSyncStatus: '',
     lastSyncError: '',
     lastCookieCountML: 0,
-    lastCookieCountAmz: 0
+    lastCookieCountAmz: 0,
+    statusML: 'waiting',
+    statusAmz: 'waiting'
   });
   setBadge('', '#999');
 }
