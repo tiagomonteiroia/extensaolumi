@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Lumi Ofertas Sync",
+  "version": "1.0.0",
+  "description": "Sincroniza cookies do Mercado Livre e Amazon automaticamente com o painel Lumi Ofertas.",
+  "author": "Lumi Ofertas",
+  "homepage_url": "https://www.agenciataruga.com",
+  "permissions": [
+    "cookies",
+    "alarms",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*.mercadolivre.com.br/*",
+    "*://*.mercadolibre.com/*",
+    "*://*.amazon.com.br/*",
+    "*://*.amazon.com/*",
+    "https://pvsnmibmagkdyqewzwdg.supabase.co/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.tarugahost.com/*",
+        "*://*.lovable.app/*",
+        "*://localhost/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extension@lumiofertas.com"
+    }
+  }
+}

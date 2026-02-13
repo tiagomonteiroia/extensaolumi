@@ -1,0 +1,17 @@
+# Agent and System
+.agent/
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# IDEs
+.vscode/
+.idea/
+
+# Logs and Build
+*.log
+*.zip
+dist/
+build/

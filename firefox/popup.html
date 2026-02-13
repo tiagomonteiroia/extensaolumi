@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+  <title>Pushly Cookie Sync</title>
+</head>
+<body>
+  <!-- Login Screen -->
+  <div id="login-screen" class="screen">
+    <div class="header">
+      <div class="logo">🔄</div>
+      <h1>Pushly Cookie Sync</h1>
+      <p class="subtitle">Sincronização automática de cookies</p>
+    </div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="email">E-mail</label>
+        <input type="email" id="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
+        <label for="password">Senha</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <div class="field">
+        <label for="api-url">URL da API <span class="optional">(opcional)</span></label>
+        <input type="url" id="api-url" placeholder="https://pushly.tarugahost.com/api">
+      </div>
+      <button type="submit" id="login-btn" class="btn btn-primary">Entrar</button>
+      <div id="login-error" class="error hidden"></div>
+    </form>
+
+    <div class="footer">
+      <a href="https://www.agenciataruga.com" target="_blank">Agência Taruga</a>
+    </div>
+  </div>
+
+  <!-- Status Screen -->
+  <div id="status-screen" class="screen hidden">
+    <div class="header">
+      <div class="logo">🔄</div>
+      <h1>Pushly Cookie Sync</h1>
+    </div>
+
+    <div class="status-card">
+      <div class="status-row">
+        <span class="label">Logado como</span>
+        <span id="user-name" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">Credencial ID</span>
+        <span id="credential-id" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">Status</span>
+        <span id="sync-status" class="value badge">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">Última sync</span>
+        <span id="last-sync" class="value">—</span>
+      </div>
+      <div class="status-row">
+        <span class="label">Cookies capturados</span>
+        <span id="cookie-count" class="value">—</span>
+      </div>
+      <div id="sync-error-row" class="status-row hidden">
+        <span class="label">Erro</span>
+        <span id="sync-error" class="value error-text">—</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="sync-btn" class="btn btn-primary">🔄 Sincronizar Agora</button>
+      <button id="logout-btn" class="btn btn-outline">Sair</button>
+    </div>
+
+    <div class="footer">
+      <a href="https://www.agenciataruga.com" target="_blank">Agência Taruga</a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

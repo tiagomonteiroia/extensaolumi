@@ -1,0 +1,378 @@
+:root {
+  /* Lumi Ofertas Purple Theme */
+  --primary: #7C3AED;
+  --primary-hover: #6D28D9;
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+
+  --version-bg: #EFF6FF;
+  --version-text: #64748B;
+
+  --success: #10B981;
+  --warning: #F59E0B;
+  --error: #EF4444;
+}
+
+/* Dark Mode (System or Manual) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0F172A;
+    --surface: #1E293B;
+    --text: #F8FAFC;
+    --text-muted: #94A3B8;
+    --border: #334155;
+
+    --version-bg: #334155;
+    --version-text: #E2E8F0;
+  }
+}
+
+body.dark {
+  --bg: #0F172A;
+  --surface: #1E293B;
+  --text: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border: #334155;
+
+  --version-bg: #334155;
+  --version-text: #E2E8F0;
+}
+
+body.light {
+  --bg: #F8FAFC;
+  --surface: #FFFFFF;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+
+  --version-bg: #EFF6FF;
+  --version-text: #64748B;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ─── Header ──────────────────────────── */
+
+header {
+  padding: 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-area h1 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 2px;
+}
+
+.version {
+  font-size: 11px;
+  color: var(--version-text);
+  background: var(--version-bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* ─── Layout ──────────────────────────── */
+
+main {
+  padding: 16px;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.intro {
+  margin-bottom: 16px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ─── Form ────────────────────────────── */
+
+.form-group {
+  margin-bottom: 14px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: var(--surface);
+  transition: all 0.2s;
+  color: var(--text);
+}
+
+.form-group input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* ─── Buttons ─────────────────────────── */
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  padding: 10px 16px;
+  transition: all 0.2s;
+  width: auto;
+}
+
+.btn-primary {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  font-size: 14px;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-icon {
+  background: transparent;
+  padding: 4px;
+  color: var(--text-muted);
+  font-size: 16px;
+}
+
+.btn-icon:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* ─── Status Screen ───────────────────── */
+
+.user-info {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: #EFF6FF;
+  color: var(--primary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+.details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.details strong {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.details small {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.status-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0;
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-row {
+  background: var(--bg);
+}
+
+.platform-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.platform-row:last-child {
+  border-bottom: none;
+}
+
+.plat-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plat-icon {
+  font-size: 16px;
+}
+
+.plat-name {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.plat-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cookie-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg);
+  padding: 2px 6px;
+  border-radius: 4px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.header-row .label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.divider {
+  display: none;
+  /* Removed in favor of border-bottom */
+}
+
+/* ─── Badges ──────────────────────────── */
+
+.badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.badge-warning {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.badge-error {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.badge-neutral {
+  background: #F1F5F9;
+  color: #475569;
+}
+
+/* ─── Footer ──────────────────────────── */
+
+footer {
+  text-align: center;
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 11px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* ─── Messages ────────────────────────── */
+
+.error-msg {
+  color: var(--error);
+  font-size: 12px;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.error-box {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  padding: 10px;
+  border-radius: 6px;
+  color: var(--error);
+  font-size: 12px;
+  margin-bottom: 16px;
+}

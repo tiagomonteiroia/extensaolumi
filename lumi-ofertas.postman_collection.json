@@ -1,0 +1,124 @@
+{
+  "info": {
+    "_postman_id": "4f329c28-1b27-44a6-b5c9-0f63029867b6",
+    "name": "lumi-ofertas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "315661"
+  },
+  "item": [
+    {
+      "name": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-auth",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"email\": \"tiago.monteiro.auto@gmail.com\",\r\n  \"password\": \"senha123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-auth",
+          "protocol": "https",
+          "host": [
+            "pvsnmibmagkdyqewzwdg",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "external-auth"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-data-receiver",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImE4Y2E0MTM0LWI4ZjctNDY2MS1iMjcxLTllMTQ0MjY2NDRhMSIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL3B2c25taWJtYWdrZHlxZXd6d2RnLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiIxMjk5ZmJiOS1kMzY4LTQzNjctYmI0MS0yMmE1NGViM2UwMGYiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzcwOTYyMTQ1LCJpYXQiOjE3NzA5NTg1NDUsImVtYWlsIjoidGlhZ28ubW9udGVpcm8uYXV0b0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImRpc3BsYXlfbmFtZSI6IlRpYWdvIiwiZW1haWwiOiJ0aWFnby5tb250ZWlyby5hdXRvQGdtYWlsLmNvbSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJwaG9uZV92ZXJpZmllZCI6ZmFsc2UsInN1YiI6IjEyOTlmYmI5LWQzNjgtNDM2Ny1iYjQxLTIyYTU0ZWIzZTAwZiJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzcwOTU4NTQ1fV0sInNlc3Npb25faWQiOiIyNWI2OWIxYi00YjAzLTQ4ZTYtOGMxNC02MjA4ZmEyNDdmZDMiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.rGkutV3oRBAyUcbSQWolYZpG93LKZCxDfSywq5zb3lMSxsfXat0cZY5OVG6iV4pwz7Mn8mzudG5Qb21JRskh7Q",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"tiago.monteiro.auto@gmail.com\",\r\n    \"cookie_ml\": \"aqui_tem_ML_v3\",\r\n    //\"cookie_amazon\": \"aqui_tem_AMAZON_v2\",\r\n    \"logged_at\": \"2026-02-13T15:30:00Z\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-data-receiver",
+          "protocol": "https",
+          "host": [
+            "pvsnmibmagkdyqewzwdg",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "external-data-receiver"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-auth",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"refresh_token\": \"xc5elipd3t2m\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1/external-auth",
+          "protocol": "https",
+          "host": [
+            "pvsnmibmagkdyqewzwdg",
+            "supabase",
+            "co"
+          ],
+          "path": [
+            "functions",
+            "v1",
+            "external-auth"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
