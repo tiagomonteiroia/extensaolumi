@@ -75,11 +75,10 @@ function showStatus() {
 
 // ─── Status display ────────────────────────────────────────────
 
-const STATUS_LABELS = {
-  success: { text: 'Conectado', cls: 'badge-success' },
-  error: { text: 'Erro', cls: 'badge-error' },
-  no_cookies: { text: 'Desconectado', cls: 'badge-warning' },
-  waiting: { text: '...', cls: 'badge-neutral' }
+success: { text: 'Conectado', cls: 'badge-success' },
+error: { text: 'Erro', cls: 'badge-error' },
+no_cookies: { text: 'Desconectado', cls: 'badge-error' },
+waiting: { text: '...', cls: 'badge-neutral' }
 };
 
 function formatDate(iso) {

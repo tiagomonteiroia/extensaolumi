@@ -111,6 +111,16 @@ function formatCookies(cookies) {
   return cookies.map((c) => `${c.name}=${c.value}`).join('; ');
 }
 
+function isLoggedML(cookies) {
+  // Mercado Livre uses 'ssid' for authenticated sessions
+  return cookies.some(c => c.name === 'ssid');
+}
+
+function isLoggedAmz(cookies) {
+  // Amazon Brazil uses 'at-acbbr' (Access Token) or 'x-acbbr'
+  return cookies.some(c => c.name === 'at-acbbr' || c.name === 'x-acbbr');
+}
+
 // ─── Sync Logic ────────────────────────────────────────────────
 
 async function syncAll() {
@@ -144,11 +154,15 @@ async function syncAll() {
       return { success: false, error: 'Nenhum cookie encontrado' };
     }
 
+    const mlLoggedIn = isLoggedML(mlCookies);
+    const amzLoggedIn = isLoggedAmz(amzCookies);
+
     // 2. Prepare payload for 'external-data-receiver'
+    // Only send cookies if actually logged in
     const payload = {
       email: userEmail,
-      cookie_ml: countMl > 0 ? formatCookies(mlCookies) : null,
-      cookie_amazon: countAmz > 0 ? formatCookies(amzCookies) : null,
+      cookie_ml: mlLoggedIn ? formatCookies(mlCookies) : null,
+      cookie_amazon: amzLoggedIn ? formatCookies(amzCookies) : null,
       logged_at: new Date().toISOString()
     };
 
@@ -159,10 +173,10 @@ async function syncAll() {
     await setStorage({
       lastSyncAt: now,
       lastSyncStatus: 'success',
-      lastCookieCountML: countMl,
-      lastCookieCountAmz: countAmz,
-      statusML: countMl > 0 ? 'success' : 'no_cookies',
-      statusAmz: countAmz > 0 ? 'success' : 'no_cookies'
+      lastCookieCountML: mlCookies.length,
+      lastCookieCountAmz: amzCookies.length,
+      statusML: mlLoggedIn ? 'success' : 'no_cookies',
+      statusAmz: amzLoggedIn ? 'success' : 'no_cookies'
     });
 
     setBadge('✓', '#10B981'); // Green checkmark

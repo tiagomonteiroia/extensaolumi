@@ -1,37 +1,41 @@
 /**
- * Pushly Cookie Sync - Background Script (Firefox)
- * © Agência Taruga (www.agenciataruga.com)
- * Autor: Leandro Oliveira Nunes (leandro@agenciataruga.com)
+ * Lumi Ofertas Sync - Background Service Worker
+ * (Antigo Pushly Cookie Sync)
  *
- * Código idêntico ao Chrome, usa wrapper para compatibilidade.
+ * Compatível com Chrome, Edge, Opera (Manifest V3 service_worker)
+ * e Firefox (Manifest V3 background scripts) via wrapper.
  */
 
 const api = (typeof browser !== 'undefined') ? browser : chrome;
 
-const DEFAULT_API_URL = 'https://pushly.tarugahost.com/api';
+// Configs Supabase
+const SUPABASE_URL = 'https://pvsnmibmagkdyqewzwdg.supabase.co/functions/v1';
 const SYNC_INTERVAL_MINUTES = 30;
-const TOKEN_REFRESH_INTERVAL_MINUTES = 50;
-const COOKIE_DOMAIN = '.mercadolivre.com.br';
+// Supabase tokens usually last longer, but we check/renew often to be safe
+const TOKEN_REFRESH_INTERVAL_MINUTES = 45;
+
+const DOMAINS = {
+  ml: { domain: '.mercadolivre.com.br' },
+  amazon: { domain: '.amazon.com.br' } // Primary Amazon domain, logic can be expanded
+};
 
 // ─── Storage helpers ───────────────────────────────────────────
 
 async function getStorage(keys) {
-  return api.storage.local.get(keys);
+  return new Promise((resolve) => {
+    api.storage.local.get(keys, resolve);
+  });
 }
 
 async function setStorage(data) {
-  return api.storage.local.set(data);
+  return new Promise((resolve) => {
+    api.storage.local.set(data, resolve);
+  });
 }
 
 // ─── API helpers ───────────────────────────────────────────────
 
-async function getApiUrl() {
-  const { apiUrl } = await getStorage(['apiUrl']);
-  return apiUrl || DEFAULT_API_URL;
-}
-
-async function apiRequest(method, path, body = null) {
-  const baseUrl = await getApiUrl();
+async function apiRequest(endpoint, body = null, method = 'POST') {
   const { accessToken } = await getStorage(['accessToken']);
 
   const headers = { 'Content-Type': 'application/json', Accept: 'application/json' };
@@ -40,16 +44,17 @@ async function apiRequest(method, path, body = null) {
   const opts = { method, headers };
   if (body) opts.body = JSON.stringify(body);
 
-  const res = await fetch(`${baseUrl}${path}`, opts);
+  const res = await fetch(`${SUPABASE_URL}${endpoint}`, opts);
 
-  if (res.status === 401 && path !== '/auth/refresh' && path !== '/auth/login') {
+  // Auto-refresh on 401
+  if (res.status === 401 && endpoint !== '/external-auth') {
     const refreshed = await refreshToken();
-    if (refreshed) return apiRequest(method, path, body);
+    if (refreshed) return apiRequest(endpoint, body, method);
     throw new Error('AUTH_EXPIRED');
   }
 
   const json = await res.json();
-  if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+  if (!res.ok) throw new Error(json.message || json.error || `HTTP ${res.status}`);
   return json;
 }
 
@@ -57,120 +62,136 @@ async function apiRequest(method, path, body = null) {
 
 async function refreshToken() {
   try {
-    const baseUrl = await getApiUrl();
     const { refreshTokenValue } = await getStorage(['refreshTokenValue']);
     if (!refreshTokenValue) return false;
 
-    const res = await fetch(`${baseUrl}/auth/refresh`, {
+    const res = await fetch(`${SUPABASE_URL}/external-auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ refresh_token: refreshTokenValue }),
     });
 
     if (!res.ok) {
-      await setStorage({ accessToken: '', refreshTokenValue: '', userEmail: '', credentialId: '' });
-      setBadge('!', '#F44336');
+      await setStorage({ accessToken: '', refreshTokenValue: '' });
+      setBadge('!', '#EF4444');
       return false;
     }
 
-    const json = await res.json();
-    const data = json.data || json;
+    const data = await res.json();
+    // Supabase auth response structure might vary slightly depending on wrapper, 
+    // but based on Postman it returns standard session data
+    const session = data.session || data;
 
-    await setStorage({
-      accessToken: data.access_token,
-      refreshTokenValue: data.refresh_token,
-    });
-
-    console.log('[Pushly] Token refreshed successfully');
-    return true;
+    if (session?.access_token) {
+      await setStorage({
+        accessToken: session.access_token,
+        refreshTokenValue: session.refresh_token || refreshTokenValue,
+      });
+      console.log('[Lumi] Token refreshed');
+      return true;
+    }
+    return false;
   } catch (err) {
-    console.error('[Pushly] Token refresh failed:', err.message);
+    console.error('[Lumi] Token refresh failed:', err);
     return false;
   }
 }
 
 // ─── Cookie capture ────────────────────────────────────────────
 
-async function getCookies() {
-  return api.cookies.getAll({ domain: COOKIE_DOMAIN });
+async function getCookies(domain) {
+  return new Promise((resolve) => {
+    api.cookies.getAll({ domain }, (cookies) => {
+      resolve(cookies || []);
+    });
+  });
 }
 
 function formatCookies(cookies) {
   return cookies.map((c) => `${c.name}=${c.value}`).join('; ');
 }
 
-// ─── Credential discovery ──────────────────────────────────────
-
-async function findCredentialId() {
-  try {
-    const json = await apiRequest('GET', '/platforms/mercadolivre/credentials');
-    const items = json.data || [];
-    if (Array.isArray(items) && items.length > 0) {
-      const active = items.find((i) => i.is_active) || items[0];
-      const id = active.id;
-      await setStorage({ credentialId: String(id) });
-      return String(id);
-    }
-    return null;
-  } catch {
-    return null;
-  }
+function isLoggedML(cookies) {
+  // Mercado Livre uses 'ssid' for authenticated sessions
+  return cookies.some(c => c.name === 'ssid');
 }
 
-// ─── Sync cookies ──────────────────────────────────────────────
+function isLoggedAmz(cookies) {
+  // Amazon Brazil uses 'at-acbbr' (Access Token) or 'x-acbbr'
+  return cookies.some(c => c.name === 'at-acbbr' || c.name === 'x-acbbr');
+}
 
-async function syncCookies() {
+// ─── Sync Logic ────────────────────────────────────────────────
+
+async function syncAll() {
   try {
-    const { accessToken } = await getStorage(['accessToken']);
+    const { accessToken, userEmail } = await getStorage(['accessToken', 'userEmail']);
     if (!accessToken) {
-      console.log('[Pushly] Not logged in, skipping sync');
-      return false;
+      console.log('[Lumi] Not logged in');
+      return { success: false, error: 'Not logged in' };
     }
 
-    const cookies = await getCookies();
-    if (cookies.length === 0) {
-      console.warn('[Pushly] No cookies found for', COOKIE_DOMAIN);
-      setBadge('0', '#FF9800');
-      await setStorage({ lastSyncStatus: 'no_cookies', lastSyncAt: new Date().toISOString() });
-      return false;
+    // 1. Capture cookies
+    const [mlCookies, amzCookies] = await Promise.all([
+      getCookies(DOMAINS.ml.domain),
+      getCookies(DOMAINS.amazon.domain)
+    ]);
+
+    const countMl = mlCookies.length;
+    const countAmz = amzCookies.length;
+
+    if (countMl === 0 && countAmz === 0) {
+      console.warn('[Lumi] No cookies found');
+      setBadge(' ', '#F59E0B'); // Orange dot
+      await setStorage({
+        lastSyncStatus: 'no_cookies',
+        lastSyncAt: new Date().toISOString(),
+        lastCookieCountML: 0,
+        lastCookieCountAmz: 0,
+        statusML: 'no_cookies',
+        statusAmz: 'no_cookies'
+      });
+      return { success: false, error: 'Nenhum cookie encontrado' };
     }
 
-    const cookieString = formatCookies(cookies);
+    const mlLoggedIn = isLoggedML(mlCookies);
+    const amzLoggedIn = isLoggedAmz(amzCookies);
 
-    let { credentialId } = await getStorage(['credentialId']);
-    if (!credentialId) {
-      credentialId = await findCredentialId();
-      if (!credentialId) {
-        console.error('[Pushly] No credential found for mercadolivre');
-        setBadge('!', '#F44336');
-        await setStorage({ lastSyncStatus: 'no_credential', lastSyncAt: new Date().toISOString() });
-        return false;
-      }
-    }
+    // 2. Prepare payload for 'external-data-receiver'
+    // Only send cookies if actually logged in
+    const payload = {
+      email: userEmail,
+      cookie_ml: mlLoggedIn ? formatCookies(mlCookies) : null,
+      cookie_amazon: amzLoggedIn ? formatCookies(amzCookies) : null,
+      logged_at: new Date().toISOString()
+    };
 
-    await apiRequest('PATCH', `/platforms/mercadolivre/credentials/${credentialId}`, {
-      credentials: { cookies: cookieString },
-    });
+    // 3. Send
+    await apiRequest('/external-data-receiver', payload);
 
     const now = new Date().toISOString();
     await setStorage({
       lastSyncAt: now,
       lastSyncStatus: 'success',
-      lastCookieCount: cookies.length,
+      lastCookieCountML: mlCookies.length,
+      lastCookieCountAmz: amzCookies.length,
+      statusML: mlLoggedIn ? 'success' : 'no_cookies',
+      statusAmz: amzLoggedIn ? 'success' : 'no_cookies'
     });
 
-    setBadge('✓', '#4CAF50');
-    console.log(`[Pushly] Synced ${cookies.length} cookies successfully`);
-    return true;
+    setBadge('✓', '#10B981'); // Green checkmark
+    console.log(`[Lumi] Synced! ML: ${countMl}, Amz: ${countAmz}`);
+    return { success: true };
+
   } catch (err) {
-    console.error('[Pushly] Sync failed:', err.message);
-    setBadge('✗', '#F44336');
+    console.error('[Lumi] Sync failed:', err);
+    setBadge(' ', '#EF4444'); // Red dot
     await setStorage({
       lastSyncAt: new Date().toISOString(),
       lastSyncStatus: 'error',
-      lastSyncError: err.message,
+      lastSyncError: err.message
     });
-    return false;
+    return { success: false, error: err.message };
   }
 }
 
@@ -184,109 +205,94 @@ function setBadge(text, color) {
 // ─── Alarm listeners ───────────────────────────────────────────
 
 api.alarms.onAlarm.addListener((alarm) => {
-  if (alarm.name === 'cookie-sync') syncCookies();
+  if (alarm.name === 'cookie-sync') syncAll();
   if (alarm.name === 'token-refresh') refreshToken();
 });
 
-// ─── Install / startup ────────────────────────────────────────
+// ─── Lifecycle ───────────────────────────────────────────────────────────────
 
 api.runtime.onInstalled.addListener(() => {
+  console.log('[Lumi] Installed');
   api.alarms.create('cookie-sync', { periodInMinutes: SYNC_INTERVAL_MINUTES });
   api.alarms.create('token-refresh', { periodInMinutes: TOKEN_REFRESH_INTERVAL_MINUTES });
-  console.log('[Pushly] Extension installed, alarms created');
 });
 
-api.runtime.onStartup.addListener(() => {
-  api.alarms.create('cookie-sync', { periodInMinutes: SYNC_INTERVAL_MINUTES });
-  api.alarms.create('token-refresh', { periodInMinutes: TOKEN_REFRESH_INTERVAL_MINUTES });
-  console.log('[Pushly] Browser started, alarms re-created');
+api.runtime.onStartup.addListener(async () => {
+  console.log('[Lumi] Startup Check');
+  const data = await getStorage(['accessToken', 'refreshTokenValue']); // Changed to refreshTokenValue
+  if (data.accessToken) {
+    // Try to refresh immediately on startup to ensure validity
+    console.log('[Lumi] Refreshing token on startup...');
+    await refreshToken();
+    await syncAll();
+  }
 });
 
-// ─── Message listener (popup -> background) ────────────────────
+// ─── Message listener ──────────────────────────────────────────
 
 api.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-  const handle = async () => {
-    if (msg.action === 'syncNow') {
-      const ok = await syncCookies();
-      return { success: ok };
-    }
-    if (msg.action === 'login') {
-      return handleLogin(msg.email, msg.password, msg.apiUrl);
-    }
-    if (msg.action === 'logout') {
-      await handleLogout();
-      return { success: true };
-    }
-  };
-  handle().then(sendResponse);
-  return true;
+  if (msg.action === 'syncNow') {
+    syncAll().then((res) => sendResponse(res));
+    return true; // async
+  }
+  if (msg.action === 'login') {
+    handleLogin(msg.email, msg.password).then(sendResponse);
+    return true;
+  }
+  if (msg.action === 'logout') {
+    handleLogout().then(() => sendResponse({ success: true }));
+    return true;
+  }
 });
 
 // ─── Login / Logout ────────────────────────────────────────────
 
-async function handleLogin(email, password, apiUrl) {
+async function handleLogin(email, password) {
   try {
-    if (apiUrl) await setStorage({ apiUrl });
-
-    const baseUrl = apiUrl || await getApiUrl();
-    const res = await fetch(`${baseUrl}/auth/login`, {
+    const res = await fetch(`${SUPABASE_URL}/external-auth`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
-    const json = await res.json();
+    const data = await res.json();
     if (!res.ok) {
-      return { success: false, error: json.message || 'Login falhou' };
+      return { success: false, error: data.message || data.error || 'Login falhou' };
     }
 
-    const data = json.data || json;
+    // Adapt based on Supabase return (sometimes data.user, sometimes separate)
+    const session = data.session || data;
+    const user = data.user || session.user;
 
     await setStorage({
-      accessToken: data.access_token,
-      refreshTokenValue: data.refresh_token,
+      accessToken: session.access_token,
+      refreshTokenValue: session.refresh_token,
       userEmail: email,
-      userName: data.user?.name || email,
-      credentialId: '',
+      userName: user?.user_metadata?.display_name || email,
     });
 
-    await findCredentialId();
-    await syncCookies();
+    // Run first sync immediately
+    await syncAll();
 
-    setBadge('✓', '#4CAF50');
-    return { success: true, user: data.user };
+    return { success: true, user };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 
 async function handleLogout() {
-  try {
-    const { accessToken, refreshTokenValue } = await getStorage(['accessToken', 'refreshTokenValue']);
-    if (accessToken) {
-      const baseUrl = await getApiUrl();
-      await fetch(`${baseUrl}/auth/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ refresh_token: refreshTokenValue || '' }),
-      }).catch(() => {});
-    }
-  } finally {
-    await setStorage({
-      accessToken: '',
-      refreshTokenValue: '',
-      userEmail: '',
-      userName: '',
-      credentialId: '',
-      lastSyncAt: '',
-      lastSyncStatus: '',
-      lastSyncError: '',
-      lastCookieCount: 0,
-    });
-    setBadge('', '#999');
-  }
+  await setStorage({
+    accessToken: '',
+    refreshTokenValue: '',
+    userEmail: '',
+    userName: '',
+    lastSyncAt: '',
+    lastSyncStatus: '',
+    lastSyncError: '',
+    lastCookieCountML: 0,
+    lastCookieCountAmz: 0,
+    statusML: 'waiting',
+    statusAmz: 'waiting'
+  });
+  setBadge('', '#999');
 }

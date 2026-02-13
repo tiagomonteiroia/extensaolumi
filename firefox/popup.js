@@ -1,7 +1,5 @@
 /**
- * Pushly Cookie Sync - Popup Logic (Firefox)
- * © Agência Taruga (www.agenciataruga.com)
- * Autor: Leandro Oliveira Nunes (leandro@agenciataruga.com)
+ * Lumi Ofertas Sync - Popup Logic
  */
 
 const api = (typeof browser !== 'undefined') ? browser : chrome;
@@ -15,17 +13,53 @@ const loginBtn = document.getElementById('login-btn');
 const loginError = document.getElementById('login-error');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
-const apiUrlInput = document.getElementById('api-url');
 
 const userName = document.getElementById('user-name');
-const credentialId = document.getElementById('credential-id');
-const syncStatus = document.getElementById('sync-status');
+const userEmail = document.getElementById('user-email');
+const syncStatus = document.getElementById('sync-status'); // removed from UI
 const lastSync = document.getElementById('last-sync');
-const cookieCount = document.getElementById('cookie-count');
+
+const statusMl = document.getElementById('status-ml');
+const countMl = document.getElementById('count-ml');
+
+const statusAmz = document.getElementById('status-amz');
+const countAmz = document.getElementById('count-amz');
+
 const syncErrorRow = document.getElementById('sync-error-row');
 const syncError = document.getElementById('sync-error');
 const syncBtn = document.getElementById('sync-btn');
 const logoutBtn = document.getElementById('logout-btn');
+const themeToggle = document.getElementById('theme-toggle');
+
+// ─── Theme Management ──────────────────────────────────────────
+
+function loadTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme) {
+    document.body.className = savedTheme;
+  }
+}
+
+function toggleTheme() {
+  const current = document.body.classList.contains('dark') ? 'dark' :
+    document.body.classList.contains('light') ? 'light' : 'system';
+
+  let next = 'system';
+  if (current === 'system') {
+    // If system is dark, go light. If system is light, go dark.
+    const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    next = systemDark ? 'light' : 'dark';
+  } else if (current === 'dark') {
+    next = 'light';
+  } else {
+    next = 'dark';
+  }
+
+  document.body.className = next;
+  localStorage.setItem('theme', next);
+}
+
+themeToggle.addEventListener('click', toggleTheme);
 
 // ─── Screen switching ──────────────────────────────────────────
 
@@ -41,11 +75,10 @@ function showStatus() {
 
 // ─── Status display ────────────────────────────────────────────
 
-const STATUS_LABELS = {
-  success: { text: 'Sincronizado', cls: 'badge-success' },
-  error: { text: 'Erro', cls: 'badge-error' },
-  no_cookies: { text: 'Sem cookies', cls: 'badge-warn' },
-  no_credential: { text: 'Sem credencial', cls: 'badge-error' },
+success: { text: 'Conectado', cls: 'badge-success' },
+error: { text: 'Erro', cls: 'badge-error' },
+no_cookies: { text: 'Desconectado', cls: 'badge-error' },
+waiting: { text: '...', cls: 'badge-neutral' }
 };
 
 function formatDate(iso) {
@@ -54,25 +87,41 @@ function formatDate(iso) {
   return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
+function renderBadge(element, statusKey) {
+  const st = STATUS_LABELS[statusKey] || STATUS_LABELS.waiting;
+  element.textContent = st.text;
+  element.className = 'badge ' + st.cls;
+}
+
 async function loadStatus() {
-  const data = await api.storage.local.get(
-    ['accessToken', 'userEmail', 'userName', 'credentialId', 'lastSyncAt', 'lastSyncStatus', 'lastSyncError', 'lastCookieCount', 'apiUrl']
+  const data = await new Promise((r) =>
+    api.storage.local.get(
+      [
+        'accessToken', 'userEmail', 'userName',
+        'lastSyncAt', 'lastSyncStatus', 'lastSyncError',
+        'statusML', 'statusAmz',
+        'lastCookieCountML', 'lastCookieCountAmz'
+      ],
+      r
+    )
   );
 
   if (!data.accessToken) {
     showLogin();
-    if (data.apiUrl) apiUrlInput.value = data.apiUrl;
     return;
   }
 
-  userName.textContent = data.userName || data.userEmail || '—';
-  credentialId.textContent = data.credentialId || '—';
-  cookieCount.textContent = data.lastCookieCount || '—';
-  lastSync.textContent = formatDate(data.lastSyncAt);
+  // Populate status
+  userName.textContent = data.userName || 'Usuário';
+  userEmail.textContent = data.userEmail || '—';
 
-  const st = STATUS_LABELS[data.lastSyncStatus] || { text: data.lastSyncStatus || '—', cls: '' };
-  syncStatus.textContent = st.text;
-  syncStatus.className = 'value badge ' + st.cls;
+  countMl.textContent = data.lastCookieCountML || '0';
+  countAmz.textContent = data.lastCookieCountAmz || '0';
+
+  renderBadge(statusMl, data.statusML || 'waiting');
+  renderBadge(statusAmz, data.statusAmz || 'waiting');
+
+  lastSync.textContent = formatDate(data.lastSyncAt);
 
   if (data.lastSyncStatus === 'error' && data.lastSyncError) {
     syncErrorRow.classList.remove('hidden');
@@ -94,37 +143,40 @@ loginForm.addEventListener('submit', async (e) => {
 
   const email = emailInput.value.trim();
   const password = passwordInput.value;
-  const apiUrl = apiUrlInput.value.trim() || null;
 
-  const res = await api.runtime.sendMessage({ action: 'login', email, password, apiUrl });
-  loginBtn.disabled = false;
-  loginBtn.textContent = 'Entrar';
+  api.runtime.sendMessage({ action: 'login', email, password }, (res) => {
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Entrar';
 
-  if (res && res.success) {
-    loadStatus();
-  } else {
-    loginError.textContent = res?.error || 'Erro ao fazer login';
-    loginError.classList.remove('hidden');
-  }
+    if (res && res.success) {
+      loadStatus();
+    } else {
+      loginError.textContent = res?.error || 'Erro ao fazer login';
+      loginError.classList.remove('hidden');
+    }
+  });
 });
 
 // ─── Sync Now ──────────────────────────────────────────────────
 
-syncBtn.addEventListener('click', async () => {
+syncBtn.addEventListener('click', () => {
   syncBtn.disabled = true;
   syncBtn.textContent = '⏳ Sincronizando...';
+  syncErrorRow.classList.add('hidden');
 
-  await api.runtime.sendMessage({ action: 'syncNow' });
-  syncBtn.disabled = false;
-  syncBtn.textContent = '🔄 Sincronizar Agora';
-  loadStatus();
+  api.runtime.sendMessage({ action: 'syncNow' }, (res) => {
+    syncBtn.disabled = false;
+    syncBtn.textContent = '🔄 Sincronizar Agora';
+    loadStatus();
+  });
 });
 
 // ─── Logout ────────────────────────────────────────────────────
 
-logoutBtn.addEventListener('click', async () => {
-  await api.runtime.sendMessage({ action: 'logout' });
-  showLogin();
+logoutBtn.addEventListener('click', () => {
+  api.runtime.sendMessage({ action: 'logout' }, () => {
+    showLogin();
+  });
 });
 
 // ─── Init ──────────────────────────────────────────────────────
