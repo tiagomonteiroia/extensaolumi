@@ -1,6 +1,6 @@
 # [Lumi Ofertas Sync](https://app.lumiofertasinteligentes.com.br/) - Extensão de Navegador
 
-Extensão que sincroniza automaticamente os cookies do **Mercado Livre** e da **Amazon** com o painel Lumi Ofertas, mantendo a sessão sempre atualizada para automações.
+Extensão que sincroniza automaticamente os cookies do **Mercado Livre**, **Amazon**, **Magalu**, **Shein** e **TikTok Shop** com o painel Lumi Ofertas, mantendo a sessão sempre atualizada para automações.
 
 **Desenvolvido por:** [Agência Taruga](https://www.agenciataruga.com)  
 **Autor:** Leandro Oliveira Nunes (leandro@agenciataruga.com)  
@@ -14,12 +14,16 @@ Extensão que sincroniza automaticamente os cookies do **Mercado Livre** e da **
 - 🔄 **Sincronização Multi-Plataforma**: 
   - Captura cookies do **Mercado Livre** (`.mercadolivre.com.br`)
   - Captura cookies da **Amazon** (`.amazon.com.br` / `.amazon.com`)
+  - Captura cookies do **Magalu** (`.magazinevoce.com.br`)
+  - Captura cookies da **Shein** (`br.shein.com`)
+  - Captura cookies do **TikTok Shop** (`affiliate.tiktok.com`)
 - ⏱️ **Automático**: Sincroniza em segundo plano a cada 30 minutos.
 - 📡 **API Segura**: Comunicação direta com Supabase Functions.
 - 🖱️ **Interface Intuitiva**:
   - Botão de sincronização manual.
   - Alternância de Tema (Claro/Escuro).
-  - Status visual individual por plataforma.
+  - Status visual individual por plataforma (com a quantidade de cookies sincronizados quando conectado).
+  - Visual com a identidade da Lumi; fonte embutida para abrir o popup sem depender da internet.
 - 🎨 **Indicadores de Status (Badge)**:
   - 🟢 **Verde**: Conectado e sincronizado.
   - 🟠 **Laranja**: Sem cookies encontrados (Desconectado da loja).
@@ -130,10 +134,13 @@ Para publicar ou atualizar a extensão, você precisará configurar contas de de
 
 ### 2. Sincronização
 - A extensão tentará sincronizar automaticamente após o login.
-- Certifique-se de estar logado no **Mercado Livre** e na **Amazon** no mesmo navegador onde a extensão está instalada.
+- Certifique-se de estar logado nas lojas (**Mercado Livre**, **Amazon**, **Magalu**, **Shein**, **TikTok Shop**) no mesmo navegador onde a extensão está instalada.
 - O card de status mostrará:
     - **Mercado Livre**: 🟢 Conectado / 🟠 Desconectado
     - **Amazon**: 🟢 Conectado / 🟠 Desconectado
+    - **Magalu**: 🟢 Conectado / 🟠 Desconectado
+    - **Shein**: 🟢 Conectado / 🟠 Desconectado
+    - **TikTok Shop**: 🟢 Conectado / 🟠 Desconectado
 
 ### 3. Solução de Problemas
 - **Laranja (🟠)**: Significa que a extensão não encontrou os cookies de sessão. Abra o site da loja (ex: amazon.com.br), faça login na sua conta, e clique em **"Sincronizar Agora"** na extensão.

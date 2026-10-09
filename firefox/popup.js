@@ -14,6 +14,7 @@ const loginError = document.getElementById('login-error');
 const emailInput = document.getElementById('email');
 const passwordInput = document.getElementById('password');
 
+const userAvatar = document.getElementById('user-avatar');
 const userName = document.getElementById('user-name');
 const userEmail = document.getElementById('user-email');
 const syncStatus = document.getElementById('sync-status'); // removed from UI
@@ -24,6 +25,15 @@ const countMl = document.getElementById('count-ml');
 
 const statusAmz = document.getElementById('status-amz');
 const countAmz = document.getElementById('count-amz');
+
+const statusMagalu = document.getElementById('status-magalu');
+const countMagalu = document.getElementById('count-magalu');
+
+const statusShein = document.getElementById('status-shein');
+const countShein = document.getElementById('count-shein');
+
+const statusTiktok = document.getElementById('status-tiktok');
+const countTiktok = document.getElementById('count-tiktok');
 
 const syncErrorRow = document.getElementById('sync-error-row');
 const syncError = document.getElementById('sync-error');
@@ -94,14 +104,22 @@ function renderBadge(element, statusKey) {
   element.className = 'badge ' + st.cls;
 }
 
+// Cookie count only matters when the platform was actually synced
+function renderCount(element, statusKey, count) {
+  const n = Number(count) || 0;
+  element.textContent = n;
+  element.title = `${n} cookies sincronizados`;
+  element.classList.toggle('invisible', statusKey !== 'success');
+}
+
 async function loadStatus() {
   const data = await new Promise((r) =>
     api.storage.local.get(
       [
         'accessToken', 'userEmail', 'userName',
         'lastSyncAt', 'lastSyncStatus', 'lastSyncError',
-        'statusML', 'statusAmz',
-        'lastCookieCountML', 'lastCookieCountAmz'
+        'statusML', 'statusAmz', 'statusMagalu', 'statusShein', 'statusTiktok',
+        'lastCookieCountML', 'lastCookieCountAmz', 'lastCookieCountMagalu', 'lastCookieCountShein', 'lastCookieCountTiktok'
       ],
       r
     )
@@ -113,14 +131,24 @@ async function loadStatus() {
   }
 
   // Populate status
-  userName.textContent = data.userName || 'Usuário';
-  userEmail.textContent = data.userEmail || '—';
+  // Avoid showing the email twice when the API returns it as the name
+  const email = data.userEmail || '';
+  const name = data.userName && data.userName !== email ? data.userName : '';
+  userName.textContent = name || email || 'Usuário';
+  userEmail.textContent = name ? email : 'Conta Lumi conectada';
+  userAvatar.textContent = (name || email || 'U').charAt(0).toUpperCase();
 
-  countMl.textContent = data.lastCookieCountML || '0';
-  countAmz.textContent = data.lastCookieCountAmz || '0';
+  renderCount(countMl, data.statusML, data.lastCookieCountML);
+  renderCount(countAmz, data.statusAmz, data.lastCookieCountAmz);
+  renderCount(countMagalu, data.statusMagalu, data.lastCookieCountMagalu);
+  renderCount(countShein, data.statusShein, data.lastCookieCountShein);
+  renderCount(countTiktok, data.statusTiktok, data.lastCookieCountTiktok);
 
   renderBadge(statusMl, data.statusML || 'waiting');
   renderBadge(statusAmz, data.statusAmz || 'waiting');
+  renderBadge(statusMagalu, data.statusMagalu || 'waiting');
+  renderBadge(statusShein, data.statusShein || 'waiting');
+  renderBadge(statusTiktok, data.statusTiktok || 'waiting');
 
   lastSync.textContent = formatDate(data.lastSyncAt);
 
@@ -162,12 +190,12 @@ loginForm.addEventListener('submit', async (e) => {
 
 syncBtn.addEventListener('click', () => {
   syncBtn.disabled = true;
-  syncBtn.textContent = '⏳ Sincronizando...';
+  syncBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Sincronizando...';
   syncErrorRow.classList.add('hidden');
 
   api.runtime.sendMessage({ action: 'syncNow' }, (res) => {
     syncBtn.disabled = false;
-    syncBtn.textContent = '🔄 Sincronizar Agora';
+    syncBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Sincronizar Agora';
     loadStatus();
   });
 });
@@ -182,4 +210,5 @@ logoutBtn.addEventListener('click', () => {
 
 // ─── Init ──────────────────────────────────────────────────────
 
+loadTheme();
 loadStatus();

@@ -16,7 +16,10 @@ const TOKEN_REFRESH_INTERVAL_MINUTES = 45;
 
 const DOMAINS = {
   ml: { domain: '.mercadolivre.com.br' },
-  amazon: { domain: '.amazon.com.br' } // Primary Amazon domain, logic can be expanded
+  amazon: { domain: '.amazon.com.br' }, // Primary Amazon domain, logic can be expanded
+  magalu: { domain: '.magazinevoce.com.br' },
+  shein: { url: 'https://br.shein.com/' }, // By URL: avoids duplicates from m.shein.com
+  tiktok: { url: 'https://affiliate.tiktok.com/' } // TikTok Shop affiliate center
 };
 
 // ─── Storage helpers ───────────────────────────────────────────
@@ -107,6 +110,15 @@ async function getCookies(domain) {
   });
 }
 
+// Cookies the browser would send to this URL (includes parent-domain cookies)
+async function getCookiesByUrl(url) {
+  return new Promise((resolve) => {
+    api.cookies.getAll({ url }, (cookies) => {
+      resolve(cookies || []);
+    });
+  });
+}
+
 function formatCookies(cookies) {
   return cookies.map((c) => `${c.name}=${c.value}`).join('; ');
 }
@@ -121,6 +133,22 @@ function isLoggedAmz(cookies) {
   return cookies.some(c => c.name === 'at-acbbr' || c.name === 'x-acbbr');
 }
 
+function isLoggedMagalu(cookies) {
+  // Magazine Luiza (Magazine Você) uses ml_sid_*, _sads, toggle_shareurl_pmd_v2
+  return cookies.some(c => c.name.startsWith('ml_sid_') || c.name === 'toggle_shareurl_pmd_v2');
+}
+
+function isLoggedShein(cookies) {
+  // Shein uses 'AT' (Access Token) + 'memberId' for authenticated sessions
+  return cookies.some(c => c.name === 'AT' && c.value) &&
+    cookies.some(c => c.name === 'memberId' && c.value);
+}
+
+function isLoggedTiktok(cookies) {
+  // TikTok uses 'sessionid' for authenticated sessions
+  return cookies.some(c => c.name === 'sessionid' && c.value);
+}
+
 // ─── Sync Logic ────────────────────────────────────────────────
 
 async function syncAll() {
@@ -132,15 +160,21 @@ async function syncAll() {
     }
 
     // 1. Capture cookies
-    const [mlCookies, amzCookies] = await Promise.all([
+    const [mlCookies, amzCookies, magaluCookies, sheinCookies, tiktokCookies] = await Promise.all([
       getCookies(DOMAINS.ml.domain),
-      getCookies(DOMAINS.amazon.domain)
+      getCookies(DOMAINS.amazon.domain),
+      getCookies(DOMAINS.magalu.domain),
+      getCookiesByUrl(DOMAINS.shein.url),
+      getCookiesByUrl(DOMAINS.tiktok.url)
     ]);
 
     const countMl = mlCookies.length;
     const countAmz = amzCookies.length;
+    const countMagalu = magaluCookies.length;
+    const countShein = sheinCookies.length;
+    const countTiktok = tiktokCookies.length;
 
-    if (countMl === 0 && countAmz === 0) {
+    if (countMl === 0 && countAmz === 0 && countMagalu === 0 && countShein === 0 && countTiktok === 0) {
       console.warn('[Lumi] No cookies found');
       setBadge(' ', '#F59E0B'); // Orange dot
       await setStorage({
@@ -148,14 +182,23 @@ async function syncAll() {
         lastSyncAt: new Date().toISOString(),
         lastCookieCountML: 0,
         lastCookieCountAmz: 0,
+        lastCookieCountMagalu: 0,
+        lastCookieCountShein: 0,
+        lastCookieCountTiktok: 0,
         statusML: 'no_cookies',
-        statusAmz: 'no_cookies'
+        statusAmz: 'no_cookies',
+        statusMagalu: 'no_cookies',
+        statusShein: 'no_cookies',
+        statusTiktok: 'no_cookies'
       });
       return { success: false, error: 'Nenhum cookie encontrado' };
     }
 
     const mlLoggedIn = isLoggedML(mlCookies);
     const amzLoggedIn = isLoggedAmz(amzCookies);
+    const magaluLoggedIn = isLoggedMagalu(magaluCookies);
+    const sheinLoggedIn = isLoggedShein(sheinCookies);
+    const tiktokLoggedIn = isLoggedTiktok(tiktokCookies);
 
     // 2. Prepare payload for 'external-data-receiver'
     // Only send cookies if actually logged in
@@ -163,6 +206,9 @@ async function syncAll() {
       email: userEmail,
       cookie_ml: mlLoggedIn ? formatCookies(mlCookies) : null,
       cookie_amazon: amzLoggedIn ? formatCookies(amzCookies) : null,
+      cookie_magalu: magaluLoggedIn ? formatCookies(magaluCookies) : null,
+      cookie_shein: sheinLoggedIn ? formatCookies(sheinCookies) : null,
+      cookie_tiktok: tiktokLoggedIn ? formatCookies(tiktokCookies) : null,
       logged_at: new Date().toISOString()
     };
 
@@ -175,12 +221,18 @@ async function syncAll() {
       lastSyncStatus: 'success',
       lastCookieCountML: mlCookies.length,
       lastCookieCountAmz: amzCookies.length,
+      lastCookieCountMagalu: magaluCookies.length,
+      lastCookieCountShein: sheinCookies.length,
+      lastCookieCountTiktok: tiktokCookies.length,
       statusML: mlLoggedIn ? 'success' : 'no_cookies',
-      statusAmz: amzLoggedIn ? 'success' : 'no_cookies'
+      statusAmz: amzLoggedIn ? 'success' : 'no_cookies',
+      statusMagalu: magaluLoggedIn ? 'success' : 'no_cookies',
+      statusShein: sheinLoggedIn ? 'success' : 'no_cookies',
+      statusTiktok: tiktokLoggedIn ? 'success' : 'no_cookies'
     });
 
     setBadge('✓', '#10B981'); // Green checkmark
-    console.log(`[Lumi] Synced! ML: ${countMl}, Amz: ${countAmz}`);
+    console.log(`[Lumi] Synced! ML: ${countMl}, Amz: ${countAmz}, Magalu: ${countMagalu}, Shein: ${countShein}, TikTok: ${countTiktok}`);
     return { success: true };
 
   } catch (err) {
@@ -291,8 +343,14 @@ async function handleLogout() {
     lastSyncError: '',
     lastCookieCountML: 0,
     lastCookieCountAmz: 0,
+    lastCookieCountMagalu: 0,
+    lastCookieCountShein: 0,
+    lastCookieCountTiktok: 0,
     statusML: 'waiting',
-    statusAmz: 'waiting'
+    statusAmz: 'waiting',
+    statusMagalu: 'waiting',
+    statusShein: 'waiting',
+    statusTiktok: 'waiting'
   });
   setBadge('', '#999');
 }

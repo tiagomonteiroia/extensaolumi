@@ -88,93 +88,141 @@
 
     <div class="preview-container">
         <!-- COPY OF POPUP.HTML CONTENT START -->
-        <div class="container">
-            <header>
-                <div class="header-content">
-                    <div class="logo-area">
-                        <h1>Lumi Ofertas</h1>
-                        <span class="version">v1.0.0</span>
-                    </div>
-                    <button id="theme-toggle" class="btn-icon" title="Alternar Tema">🌓</button>
+    <div class="container">
+        <header>
+          <div class="header-content">
+            <div class="logo-area">
+              <img class="logo" src="chrome/icons/icon-48.png" alt="" width="34" height="34">
+              <div class="brand">
+                <div class="brand-line">
+                  <h1>LUMI</h1>
+                  <span class="version">v1.2.0</span>
                 </div>
-            </header>
+                <span class="tagline">Ofertas com inteligência</span>
+              </div>
+            </div>
+            <button id="theme-toggle" class="btn-icon" title="Alternar Tema">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+          </div>
+        </header>
 
-            <main>
-                <!-- LOGIN SCREEN -->
-                <div id="login-screen" class="">
-                    <p class="intro">Entre com sua conta Lumi Ofertas para sincronizar.</p>
-                    <form id="login-form" onsubmit="event.preventDefault(); showStatus();">
-                        <div class="form-group">
-                            <label for="email">E-mail</label>
-                            <input type="email" id="email" placeholder="seu@email.com" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="password">Senha</label>
-                            <input type="password" id="password" placeholder="••••••••" required>
-                        </div>
+        <main>
+          <!-- LOGIN SCREEN -->
+          <div id="login-screen" class="">
+            <p class="intro">Entre com sua conta Lumi Ofertas para sincronizar.</p>
+            <form id="login-form" onsubmit="event.preventDefault(); showStatus();">
+              <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" placeholder="seu@email.com" required>
+              </div>
+              <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+              </div>
 
-                        <button type="submit" id="login-btn" class="btn-primary">Entrar</button>
-                        <div id="login-error" class="error-msg hidden">Erro ao logar</div>
-                    </form>
+              <button type="submit" id="login-btn" class="btn-primary">Entrar</button>
+              <div id="login-error" class="error-msg hidden">Erro ao logar</div>
+            </form>
+          </div>
+
+          <!-- STATUS SCREEN -->
+          <div id="status-screen" class="hidden">
+            <div class="user-info">
+              <div id="user-avatar" class="avatar">S</div>
+              <div class="details">
+                <strong id="user-name">suporteautomacaosimplificada@gmail.com</strong>
+                <small id="user-email">Conta Lumi conectada</small>
+              </div>
+              <button id="logout-btn" class="btn-icon" title="Sair" onclick="showLogin()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+              </button>
+            </div>
+
+            <div class="status-card">
+              <div class="status-row header-row">
+                <span class="label">Última Sincronização</span>
+                <span id="last-sync" class="value">09/10, 03:13</span>
+              </div>
+
+              <!-- Mercado Livre Row -->
+              <div class="platform-row">
+                <div class="plat-info">
+                  <span class="plat-icon plat-ml">ML</span>
+                  <span class="plat-name">Mercado Livre</span>
                 </div>
-
-                <!-- STATUS SCREEN -->
-                <div id="status-screen" class="hidden">
-                    <div class="user-info">
-                        <div class="avatar">👤</div>
-                        <div class="details">
-                            <strong id="user-name">Usuário Exemplo</strong>
-                            <small id="user-email">usuario@exemplo.com</small>
-                        </div>
-                        <button id="logout-btn" class="btn-icon" title="Sair" onclick="showLogin()">🚪</button>
-                    </div>
-
-                    <div class="status-card">
-                        <div class="status-row header-row">
-                            <span class="label">Última Sincronização</span>
-                            <span id="last-sync" class="value">Hoje, 10:45</span>
-                        </div>
-
-                        <div class="divider"></div>
-
-                        <!-- Mercado Livre Row -->
-                        <div class="platform-row">
-                            <div class="plat-info">
-                                <span class="plat-icon">🤝</span>
-                                <span class="plat-name">Mercado Livre</span>
-                            </div>
-                            <div class="plat-status">
-                                <span id="status-ml" class="badge badge-success">Conectado</span>
-                                <span id="count-ml" class="cookie-count" title="Cookies">12</span>
-                            </div>
-                        </div>
-
-                        <!-- Amazon Row -->
-                        <div class="platform-row">
-                            <div class="plat-info">
-                                <span class="plat-icon">🛒</span>
-                                <span class="plat-name">Amazon</span>
-                            </div>
-                            <div class="plat-status">
-                                <span id="status-amz" class="badge badge-warning">Desconectado</span>
-                                <span id="count-amz" class="cookie-count" title="Cookies">0</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="sync-error-row" class="error-box hidden">
-                        <strong>Erro:</strong> <span id="sync-error">Falha na conexão</span>
-                    </div>
-
-                    <button id="sync-btn" class="btn-primary full-width" onclick="simulateSync()">
-                        🔄 Sincronizar Agora
-                    </button>
+                <div class="plat-status">
+                  <span id="status-ml" class="badge badge-success">Conectado</span>
+                  <span id="count-ml" class="cookie-count" title="72 cookies sincronizados">72</span>
                 </div>
-            </main>
+              </div>
 
-            <footer>
-                <p>Lumi Ofertas Sync</p>
-            </footer>
-        </div>
+              <!-- Amazon Row -->
+              <div class="platform-row">
+                <div class="plat-info">
+                  <span class="plat-icon plat-amz">a</span>
+                  <span class="plat-name">Amazon</span>
+                </div>
+                <div class="plat-status">
+                  <span id="status-amz" class="badge badge-success">Conectado</span>
+                  <span id="count-amz" class="cookie-count" title="14 cookies sincronizados">14</span>
+                </div>
+              </div>
+
+              <!-- Magalu Row -->
+              <div class="platform-row">
+                <div class="plat-info">
+                  <span class="plat-icon plat-magalu">M</span>
+                  <span class="plat-name">Magalu</span>
+                </div>
+                <div class="plat-status">
+                  <span id="status-magalu" class="badge badge-error">Desconectado</span>
+                  <span id="count-magalu" class="cookie-count invisible" title="40 cookies sincronizados">40</span>
+                </div>
+              </div>
+
+              <!-- Shein Row -->
+              <div class="platform-row">
+                <div class="plat-info">
+                  <span class="plat-icon plat-shein">S</span>
+                  <span class="plat-name">Shein</span>
+                </div>
+                <div class="plat-status">
+                  <span id="status-shein" class="badge badge-error">Desconectado</span>
+                  <span id="count-shein" class="cookie-count invisible" title="13 cookies sincronizados">13</span>
+                </div>
+              </div>
+
+              <!-- TikTok Shop Row -->
+              <div class="platform-row">
+                <div class="plat-info">
+                  <span class="plat-icon plat-tiktok">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
+                  </span>
+                  <span class="plat-name">TikTok Shop</span>
+                </div>
+                <div class="plat-status">
+                  <span id="status-tiktok" class="badge badge-success">Conectado</span>
+                  <span id="count-tiktok" class="cookie-count" title="43 cookies sincronizados">43</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="sync-error-row" class="error-box hidden">
+              <strong>Erro:</strong> <span id="sync-error">Falha na conexão</span>
+            </div>
+
+            <button id="sync-btn" class="btn-primary full-width" onclick="simulateSync()">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+              Sincronizar Agora
+            </button>
+          </div>
+        </main>
+
+        <footer>
+          <p>Lumi Ofertas Sync · <span>lumiofertasinteligentes.com.br</span></p>
+        </footer>
+      </div>
         <!-- COPY OF POPUP.HTML CONTENT END -->
     </div>
 
@@ -199,12 +247,12 @@
         }
 
         function simulateSync() {
-            const originalText = syncBtn.innerText;
-            syncBtn.innerText = '⏳ Sincronizando...';
+            const originalHtml = syncBtn.innerHTML;
+            syncBtn.innerHTML = '<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Sincronizando...';
             // syncBtn.disabled = true;
 
             setTimeout(() => {
-                syncBtn.innerText = originalText;
+                syncBtn.innerHTML = originalHtml;
                 syncBtn.disabled = false;
                 alert('Sync simulado com sucesso!');
             }, 1500);
