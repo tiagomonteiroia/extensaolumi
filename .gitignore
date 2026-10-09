@@ -15,3 +15,7 @@ node_modules/
 *.zip
 dist/
 build/
+
+# Secrets
+.env
+.secrets/

@@ -99,6 +99,22 @@ Para publicar ou atualizar a extensão, você precisará configurar contas de de
 5. Copie o `JWT issuer` (sua chave de identificação) e o `JWT secret`.
    - **Atenção**: O segredo é exibido apenas uma vez. Guarde-o com segurança.
 
+### Publicação automática (Chrome Web Store API V2)
+
+O script `scripts/publish-chrome.mjs` empacota a pasta `chrome/`, envia e submete para análise usando uma service account.
+
+1. Copie `.env.example` para `.env` e preencha o `CWS_PUBLISHER_ID`.
+2. Salve a chave JSON da service account em `.secrets/cws-service-account.json` (ignorado pelo git).
+3. A service account precisa estar cadastrada no Developer Dashboard em **Configurações → Conta de serviço**.
+4. Aumente a `version` em `chrome/manifest.json` e rode:
+
+```bash
+node scripts/publish-chrome.mjs            # envia e publica após aprovação
+node scripts/publish-chrome.mjs --check    # só verifica acesso e status
+node scripts/publish-chrome.mjs --staged   # após aprovação, aguarda publicação manual
+node scripts/publish-chrome.mjs --upload-only  # só envia o rascunho
+```
+
 ### 2. Publicando Oficialmente
 
 #### Google Chrome Web Store
