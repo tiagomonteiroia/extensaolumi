@@ -7,6 +7,7 @@
  *   node scripts/publish-chrome.mjs --check      # só valida credenciais e mostra o status do item
  *   node scripts/publish-chrome.mjs --upload-only  # envia sem enviar para análise/publicação
  *   node scripts/publish-chrome.mjs --staged     # após aprovado, aguarda publicação manual
+ *   node scripts/publish-chrome.mjs --submit-only  # reenvia o rascunho atual para análise, sem novo upload
  *
  * Configuração (.env na raiz, fora do git):
  *   CWS_PUBLISHER_ID=...                 # Developer Dashboard > Conta/Publisher > Settings
@@ -125,25 +126,27 @@ if (args.has('--check')) {
   process.exit(0);
 }
 
-const { zipPath, version } = buildZip();
-console.log(`✔ Pacote gerado: dist/lumi-chrome-v${version}.zip`);
+if (!args.has('--submit-only')) {
+  const { zipPath, version } = buildZip();
+  console.log(`✔ Pacote gerado: dist/lumi-chrome-v${version}.zip`);
 
-let upload = await call('POST', `/upload${itemPath}:upload`, token, readFileSync(zipPath), 'application/zip');
-const inProgress = (state) => /IN_PROGRESS/.test(state || '');
-for (let i = 0; inProgress(upload.uploadState); i++) {
-  if (i >= 20) fail('Upload ainda em processamento. Rode com --check mais tarde.');
-  await sleep(3000);
-  const status = await call('GET', `${itemPath}:fetchStatus`, token);
-  upload = { ...upload, uploadState: status.lastAsyncUploadState || status.uploadState };
-}
-if (/FAIL|NOT_FOUND/.test(upload.uploadState || '')) {
-  fail(`Upload não concluído (${upload.uploadState}):\n${JSON.stringify(upload, null, 2)}`);
-}
-console.log(`✔ Upload da v${version} concluído`);
+  let upload = await call('POST', `/upload${itemPath}:upload`, token, readFileSync(zipPath), 'application/zip');
+  const inProgress = (state) => /IN_PROGRESS/.test(state || '');
+  for (let i = 0; inProgress(upload.uploadState); i++) {
+    if (i >= 20) fail('Upload ainda em processamento. Rode com --check mais tarde.');
+    await sleep(3000);
+    const status = await call('GET', `${itemPath}:fetchStatus`, token);
+    upload = { ...upload, uploadState: status.lastAsyncUploadState || status.uploadState };
+  }
+  if (/FAIL|NOT_FOUND/.test(upload.uploadState || '')) {
+    fail(`Upload não concluído (${upload.uploadState}):\n${JSON.stringify(upload, null, 2)}`);
+  }
+  console.log(`✔ Upload da v${version} concluído`);
 
-if (args.has('--upload-only')) {
-  console.log('ℹ --upload-only: rascunho enviado. Envie para análise pelo Developer Dashboard.');
-  process.exit(0);
+  if (args.has('--upload-only')) {
+    console.log('ℹ --upload-only: rascunho enviado. Envie para análise pelo Developer Dashboard.');
+    process.exit(0);
+  }
 }
 
 const publishBody = args.has('--staged') ? JSON.stringify({ publishType: 'STAGED_PUBLISH' }) : undefined;
