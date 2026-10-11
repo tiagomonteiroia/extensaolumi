@@ -47,6 +47,6 @@ Mantenha-os coerentes com `docs/politica-de-privacidade-extensao.md` e com `chro
 
 ## URL da política de privacidade
 
-> https://lumiofertasinteligentes.com.br/politica-de-privacidade-extensao/
+> https://tiagomonteiroia.github.io/extensaolumi/privacidade/
 
-(Ou a URL onde a política for publicada.)
+(Publicada via GitHub Pages a partir de `docs/privacidade/index.html`.)
